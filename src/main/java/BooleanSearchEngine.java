@@ -2,16 +2,25 @@ import com.itextpdf.kernel.pdf.PdfDocument;
 import com.itextpdf.kernel.pdf.PdfReader;
 import com.itextpdf.kernel.pdf.canvas.parser.PdfTextExtractor;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
 import java.util.*;
 
 public class BooleanSearchEngine implements SearchEngine {
     private final Map<String, List<PageEntry>> database = new HashMap<>();
-    List<String> stopList = new ArrayList<>();
+    private final Set<String> stopList = new HashSet<>();
 
     public BooleanSearchEngine(File pdfsDir) throws IOException {
-
+        File fileStop = new File("stop-ru.txt");
+        try (BufferedReader reader = new BufferedReader(new FileReader(fileStop))) {
+            while (reader.ready()) {
+                stopList.add(reader.readLine());
+            }
+        } catch (IOException e) {
+            e.getMessage();
+        }
         for (File pdf : pdfsDir.listFiles()) {
             var doc = new PdfDocument(new PdfReader(pdf));
             int countPages = doc.getNumberOfPages();
@@ -49,7 +58,7 @@ public class BooleanSearchEngine implements SearchEngine {
         List<PageEntry> result = new ArrayList<>();
 
         for (String newWord : request) {
-            if (database.get(newWord) != null) {
+            if (database.containsKey(newWord)) {
                 temporaryList.addAll(database.get(newWord));
                 temporaryList.removeAll(stopList);
             }
